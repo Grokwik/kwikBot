@@ -1,0 +1,36 @@
+[{
+  "contrib": "markit",
+  "c_ids": [
+      { "value": "MA_GENE_CDS" },
+      { "value": "MA" },
+      { "value": "MA_CONTR_CDS" },
+      { "value": "MA_FLUX_CDS" }
+    ]
+}, {
+  "contrib": "moodys",
+  "c_ids": [
+      { "value": "REFONTE_MO" }
+    ]
+}, {
+  "contrib": "rmpm",
+  "c_ids": [
+      { "value": "RMPM" },
+      { "value": "RMPM_CONNECT" },
+      { "value": "RMPM_CONNECTION" },
+      { "value": "RMPM_CHARG_xxx" },
+      { "value": "RMPM_CHARG" },
+      { "value": "RMPM_TRAIT" },
+      { "value": "RMPM" }
+    ]
+}, {
+  "contrib": "sp",
+  "c_ids": [
+      { "value": "SP_LOADING_FILES" }
+    ]
+}, {
+  "contrib": "annuaire",
+  "c_ids": [
+      { "value": "WEB_ANNUAIRE" }
+    ]
+}
+]
