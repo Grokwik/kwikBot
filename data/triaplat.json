@@ -1,0 +1,30 @@
+[
+ {
+   "jobname": "JOB1",
+   "job_type": "",
+   "owner": "",
+   "start_times": "",
+   "alarm_if_fail": "",
+   "box_name": "",
+   "command": "",
+   "alias_machine": "",
+   "condition": "",
+   "run_calendar": "",
+   "description": "",
+   "run_window": ""
+ },
+ {
+     "jobname": "JOB2",
+     "job_type": "",
+     "owner": "",
+     "start_times": "",
+     "alarm_if_fail": "",
+     "box_name": "",
+     "command": "",
+     "alias_machine": "",
+     "condition": "",
+     "run_calendar": "",
+     "description": "",
+     "run_window": ""
+ }
+]
