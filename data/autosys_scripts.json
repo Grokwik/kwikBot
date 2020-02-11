@@ -1,0 +1,4 @@
+[
+    { "as_script":"FirstScript.ksh", "called_script":"/home/myhome/sendFile.sh TOTO"},
+    { "as_script":"SecondScript.ksh", "called_script":"/home/myhome/sendFile.sh TITI"}
+]
