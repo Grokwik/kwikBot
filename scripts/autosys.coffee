@@ -22,12 +22,13 @@ loadDataFromJson = (fname) ->
     #console.log "lines loaded : "+data_file.length
     require data_file
 
-json = loadDataFromJson 'autosys_calendars.json'
+jsonCal = loadDataFromJson 'autosys_calendars.json'
+jsonAS = loadDataFromJson 'autosys_scripts.json'
 
 module.exports = (robot) ->
-    robot.hear /(calendrier|calendar) (.*) desc/i, (res) ->
-        calendrier = res.match[2]
-        description = cur_cal.description for cur_cal in json when cur_cal.name is calendrier
+    robot.hear /(.*) (cal|calendrier|calendar) desc/i, (res) ->
+        calendrier = res.match[1]
+        description = cur_cal.description for cur_cal in jsonCal when cur_cal.name is calendrier
 #        description = "inconnu" if description?
         res.reply ""
         res.reply "La description du calendrier #{calendrier} est #{description}"
@@ -35,16 +36,16 @@ module.exports = (robot) ->
     robot.hear /(calendriers|calendars)$/i, (res) ->
         res.reply ""
         res.reply "Les calendriers référencés sont :"
-        res.reply "#{cur_cal.name} : #{cur_cal.description}" for cur_cal in json
+        res.reply "#{cur_cal.name} : #{cur_cal.description}" for cur_cal in jsonCal
 
     robot.hear /(.*) (call|calls)$/i, (res) ->
         as_script = res.match[1]
-        res.reply script.called_script for script in json when script.as_script is as_script
+        res.reply script.called_script for script in jsonAS when script.as_script is as_script
 
     robot.hear /(.*) called/i, (res) ->
         pattern = res.match[1]
         scripts = []
-        scripts.push script for script in json when -1 isnt script.called_script.indexOf pattern
+        scripts.push script for script in jsonAS when -1 isnt script.called_script.indexOf pattern
         scripts.sort()
         res.reply ""
         res.reply script.as_script+" ==> "+script.called_script for script in scripts
