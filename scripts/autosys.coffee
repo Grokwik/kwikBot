@@ -12,25 +12,42 @@
 'use strict'
 fs = require 'fs'
 
+loadDataFromJson = (fname) ->
+    data_file = process.cwd()+"\\data\\"+fname
+    #console.log "loading "+data_file+"..."
+    fs.exists data_file, (exists) ->
+        if !exists
+            console.log "File doesn't exist"
+            return ""
+    #console.log "lines loaded : "+data_file.length
+    require data_file
+
 module.exports = (robot) ->
-  robot.hear /calendrier (.*)/i, (res) ->
-    data_file = process.cwd()+'/data/autosys_calendars.json'
-    calendrier = res.match[1]
+    robot.hear /(calendrier|calendar) (.*) desc/i, (res) ->
+        json = loadDataFromJson 'autosys_calendars.json'
+        calendrier = res.match[2]
 
-    fs.exists data_file, (exists) ->
-      if !exists
-        return
-      json = require data_file
-      description = cur_cal.description for cur_cal in json when cur_cal.name is calendrier
-#      description = "inconnu" if description?
-      res.reply "La description du calendrier #{calendrier} est #{description}"
+        description = cur_cal.description for cur_cal in json when cur_cal.name is calendrier
+#        description = "inconnu" if description?
+        res.reply ""
+        res.reply "La description du calendrier #{calendrier} est #{description}"
 
-  robot.hear /calendriers/i, (res) ->
-    data_file = process.cwd()+'/data/autosys_calendars.json'
+    robot.hear /(calendriers|calendars)$/i, (res) ->
+        json = loadDataFromJson 'autosys_calendars.json'
+        res.reply ""
+        res.reply "Les calendriers référencés sont :"
+        res.reply "#{cur_cal.name} : #{cur_cal.description}" for cur_cal in json
 
-    fs.exists data_file, (exists) ->
-      if !exists
-        return
-      json = require data_file
-      res.reply "Les calendriers référencés sont :"
-      res.reply "#{cur_cal.name} : #{cur_cal.description}" for cur_cal in json
+    robot.hear /(.*) (call|calls)$/i, (res) ->
+        json = loadDataFromJson 'autosys_scripts.json'
+        as_script = res.match[1]
+        res.reply script.called_script for script in json when script.as_script is as_script
+
+    robot.hear /(.*) called/i, (res) ->
+        pattern = res.match[1]
+        json = loadDataFromJson 'autosys_scripts.json'
+        scripts = []
+        scripts.push script for script in json when -1 isnt script.called_script.indexOf pattern
+        scripts.sort()
+        res.reply ""
+        res.reply script.as_script+" ==> "+script.called_script for script in scripts
