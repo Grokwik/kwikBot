@@ -22,30 +22,27 @@ loadDataFromJson = (fname) ->
     #console.log "lines loaded : "+data_file.length
     require data_file
 
+json = loadDataFromJson 'autosys_calendars.json'
+
 module.exports = (robot) ->
     robot.hear /(calendrier|calendar) (.*) desc/i, (res) ->
-        json = loadDataFromJson 'autosys_calendars.json'
         calendrier = res.match[2]
-
         description = cur_cal.description for cur_cal in json when cur_cal.name is calendrier
 #        description = "inconnu" if description?
         res.reply ""
         res.reply "La description du calendrier #{calendrier} est #{description}"
 
     robot.hear /(calendriers|calendars)$/i, (res) ->
-        json = loadDataFromJson 'autosys_calendars.json'
         res.reply ""
         res.reply "Les calendriers référencés sont :"
         res.reply "#{cur_cal.name} : #{cur_cal.description}" for cur_cal in json
 
     robot.hear /(.*) (call|calls)$/i, (res) ->
-        json = loadDataFromJson 'autosys_scripts.json'
         as_script = res.match[1]
         res.reply script.called_script for script in json when script.as_script is as_script
 
     robot.hear /(.*) called/i, (res) ->
         pattern = res.match[1]
-        json = loadDataFromJson 'autosys_scripts.json'
         scripts = []
         scripts.push script for script in json when -1 isnt script.called_script.indexOf pattern
         scripts.sort()
