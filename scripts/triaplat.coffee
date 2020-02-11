@@ -32,69 +32,118 @@ loadDataFromJson = (fname) ->
         if !exists
             console.log "File doesn't exist"
             return ""
-    #console.log "lines loaded : "+json.length
+    #console.log "lines loaded : "+data_file.length
     require data_file
 
+json = loadDataFromJson 'triaplat.json'
+
+getJob = (exactname) ->
+    foundJob = cur_job for cur_job in json when exactname is cur_job.jobname
+    return if foundJob? then foundJob else false
+
+displayJob = (foundJob, res) ->
+    if not foundJob
+        res.reply "Unkown job :("
+        return
+    res.reply "Description   : "+foundJob.description unless 0 is foundJob.description.length
+    res.reply "Box           : "+foundJob.box_name unless 0 is foundJob.box_name.length
+    res.reply "Type          : "+foundJob.job_type
+    res.reply "Calendar      : "+foundJob.run_calendar unless 0 is foundJob.run_calendar.length
+    res.reply "Start time    : "+foundJob.start_times unless 0 is foundJob.start_times.length
+    res.reply "Condition     : "+foundJob.condition unless 0 is foundJob.condition.length
+#    res.reply "Owner         : "+foundJob.owner
+    res.reply "Command       : "+foundJob.command unless 0 is foundJob.command.length
+    res.reply "Machine       : "+foundJob.alias_machine unless 0 is foundJob.alias_machine.length
+    res.reply "Run window    : "+foundJob.run_window unless 0 is foundJob.run_window.length
+#    res.reply "Alarm if fail : "+foundJob.alarm_if_fail unless 0 is foundJob.alarm_if_fail.length
+
 module.exports = (robot) ->
-    robot.hear /tap (help|aide|\?|--help|-h)/i, (res) ->
+    ################################################################################
+    ## LISTINGS ####################################################################
+    ################################################################################
+    robot.hear /jobs$/i, (res) ->
         res.reply ""
-        res.reply "tap jobs        : List all the jobs"
-        res.reply "tap boxes       : List all the boxes"
-        res.reply "tap like XX     : Lists all the jobs whose name are containing XX"
-        res.reply "                : aliases : search, cherche, recherche"
-        res.reply "tap desc XX     : Displays the description of the job named XX"
-        res.reply "                : aliases : description, details"
-        res.reply "tap triggers XX : List the jobs that are triggered by the success of the job XX"
-        res.reply "                : aliases : declenche, déclenche"
-        res.reply "tap childs XX   : List all the jobs whose box is XX"
-        res.reply "                : aliases : fils, filles, enfants, descendants, descendantes"
+        res.reply cur_job.jobname for cur_job in json when "CMD" is cur_job.job_type
+        res.reply "--------------------------------------------------------------"
 
-    robot.hear /tap jobs/i, (res) ->
-        json = loadDataFromJson 'triaplat.json'
+    robot.hear /(file transferts|file transfers|fts)$/i, (res) ->
         res.reply ""
-        res.reply cur_job.jobname for cur_job in json # when cur_job.contrib is contributeur
+        res.reply cur_job.jobname for cur_job in json when "FT" is cur_job.job_type
+        res.reply "--------------------------------------------------------------"
 
-    robot.hear /tap boxes/i, (res) ->
-        json = loadDataFromJson 'triaplat.json'
+    robot.hear /(boxes|boxs)/i, (res) ->
         res.reply ""
         res.reply cur_job.jobname for cur_job in json when "BOX" is cur_job.job_type
+        res.reply "--------------------------------------------------------------"
 
-    robot.hear /tap (like|search|cherche|recherche) (.*)/i, (res) ->
-        pattern = res.match[2]
-        json = loadDataFromJson 'triaplat.json'
-        res.reply ""
-        res.reply cur_job.jobname for cur_job in json when -1 isnt cur_job.jobname.indexOf pattern
+    robot.hear /jobs like (.*)/i, (res) ->
+        pattern = res.match[1]
+        jobs = []
+        jobs.push cur_job.jobname for cur_job in json when -1 isnt cur_job.jobname.indexOf pattern
+        jobs.sort()
+        res.reply "==> Jobs looking like #{pattern} <=="
+        res.reply jobname for jobname in jobs
+        res.reply "--------------------------------------------------------------"
 
-    robot.hear /tap (triggers|declenche|déclenche) (.*)/i, (res) ->
-        trigger = res.match[2]
-        json = loadDataFromJson 'triaplat.json'
-        res.reply ""
+    ################################################################################
+    ## SEARCHES ####################################################################
+    ################################################################################
+    robot.hear /jobs by calendar (.*)/i, (res) ->
+        calendar = res.match[1]
+        res.reply "==> The following jobs are following the calendar #{calendar} <=="
+        res.reply cur_job.jobname for cur_job in json when calendar is cur_job.run_calendar
+        res.reply "--------------------------------------------------------------"
+    #
+    ################################################################################
+    ## DETAILS #####################################################################
+    ################################################################################
+    robot.hear /(.*) (triggers|declenche|déclenche)/i, (res) ->
+        trigger = res.match[1]
+        res.reply "==> The job #{trigger} triggers the following jobs <=="
         res.reply cur_job.jobname for cur_job in json when -1 isnt cur_job.condition.indexOf trigger
+        res.reply "--------------------------------------------------------------"
 
-    robot.hear /tap (childs|fils|filles|enfants|descendants|descendantes) (.*)/i, (res) ->
-        father = res.match[2]
-        json = loadDataFromJson 'triaplat.json'
-        res.reply ""
+    robot.hear /(.*) (childs|kids)/i, (res) ->
+        father = res.match[1]
+        res.reply "==> Here are the #{father} job's childs <=="
         res.reply cur_job.jobname for cur_job in json when father is cur_job.box_name
+        res.reply "--------------------------------------------------------------"
 
-    robot.hear /tap (desc|description|details) (.*)/i, (res) ->
-        exactname = res.match[2]
-        json = loadDataFromJson 'triaplat.json'
-        foundJob = cur_job for cur_job in json when exactname is cur_job.jobname
-        found = true if foundJob?
-        if not found
-            res.reply "Unkown job :("
+    robot.hear /(.*) job (desc|description|details)/i, (res) ->
+        exactname = res.match[1]
+        foundJob = getJob exactname
+        if not foundJob
+            res.reply "ERROR :: Unkown job :("
+            res.reply "--------------------------------------------------------------"
             return
-        res.reply ""
         res.reply "===>  "+foundJob.jobname+"  <==="
-        res.reply "Description   : "+foundJob.description
-        res.reply "Box           : "+foundJob.box_name
-        res.reply "Type          : "+foundJob.job_type
-        res.reply "Calendar      : "+foundJob.run_calendar
-        res.reply "Start time    : "+foundJob.start_times
-        res.reply "Condition     : "+foundJob.condition
-        res.reply "Owner         : "+foundJob.owner
-        res.reply "Command       : "+foundJob.command
-        res.reply "Machine       : "+foundJob.alias_machine
-        res.reply "Run window    : "+foundJob.run_window
-        res.reply "Alarm if fail : "+foundJob.alarm_if_fail
+        displayJob(foundJob,res)
+        res.reply "--------------------------------------------------------------"
+
+    robot.hear /(.*) (family|audit)/i, (res) ->
+        jobname = res.match[1]
+        res.reply ""
+        foundJob = getJob jobname
+        if not foundJob
+            res.reply "ERROR :: Unkown job :("
+            return
+
+        parent = getJob foundJob.box_name
+        if parent
+            grandParent = getJob parent.box_name
+
+        res.reply "--------------------------------------------------------------"
+        if grandParent
+            res.reply "===> GRAND PARENT : "+grandParent.jobname
+            res.reply "--------------------------------------------------------------"
+            displayJob(grandParent,res)
+            res.reply "--------------------------------------------------------------"
+        if parent
+            res.reply "===> PARENT : "+parent.jobname
+            res.reply "--------------------------------------------------------------"
+            displayJob(parent,res)
+            res.reply "--------------------------------------------------------------"
+        res.reply "===> JOB       : "+foundJob.jobname
+        res.reply "--------------------------------------------------------------"
+        displayJob(foundJob,res)
+        res.reply "--------------------------------------------------------------"
