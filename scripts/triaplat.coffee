@@ -23,22 +23,13 @@
 #      "job_type": "CMD",
 #      (...)
 'use strict'
-fs = require 'fs'
 
-loadDataFromJson = (fname) ->
-    data_file = process.cwd()+"\\data\\"+fname
-    #console.log "loading "+data_file+"..."
-    fs.exists data_file, (exists) ->
-        if !exists
-            console.log "File doesn't exist"
-            return ""
-    #console.log "lines loaded : "+data_file.length
-    require data_file
-
-json = loadDataFromJson 'triaplat.json'
+jsonLoader = require '../libs/jsonLoader'
+jsonLdr = new jsonLoader.JsonLoader('triaplat.json')
+#json = jsonLoader.load('triaplat.json')
 
 getJob = (exactname) ->
-    foundJob = cur_job for cur_job in json when exactname is cur_job.jobname
+    foundJob = cur_job for cur_job in jsonLdr.data when exactname is cur_job.jobname
     return if foundJob? then foundJob else false
 
 displayJob = (foundJob, res) ->
@@ -57,31 +48,59 @@ displayJob = (foundJob, res) ->
     res.reply "Run window    : "+foundJob.run_window unless 0 is foundJob.run_window.length
 #    res.reply "Alarm if fail : "+foundJob.alarm_if_fail unless 0 is foundJob.alarm_if_fail.length
 
+jobDesc = (exactname, res) ->
+    foundJob = getJob exactname
+    if not foundJob
+        res.reply "ERROR :: Unkown job :("
+        res.reply "--------------------------------------------------------------"
+        return
+    res.reply "===>  "+foundJob.jobname+"  <==="
+    displayJob(foundJob,res)
+    res.reply "--------------------------------------------------------------"
+
 module.exports = (robot) ->
     ################################################################################
     ## LISTINGS ####################################################################
     ################################################################################
     robot.hear /jobs$/i, (res) ->
         res.reply ""
-        res.reply cur_job.jobname for cur_job in json when "CMD" is cur_job.job_type
+        res.reply cur_job.jobname for cur_job in jsonLdr.data when "CMD" is cur_job.job_type
         res.reply "--------------------------------------------------------------"
 
-    robot.hear /(file transferts|file transfers|fts)$/i, (res) ->
+    robot.hear /^fts$/i, (res) ->
         res.reply ""
-        res.reply cur_job.jobname for cur_job in json when "FT" is cur_job.job_type
+        res.reply cur_job.jobname for cur_job in jsonLdr.data when "FT" is cur_job.job_type
         res.reply "--------------------------------------------------------------"
 
-    robot.hear /(boxes|boxs)/i, (res) ->
+    robot.hear /(boxes|boxs)$/i, (res) ->
         res.reply ""
-        res.reply cur_job.jobname for cur_job in json when "BOX" is cur_job.job_type
+        res.reply cur_job.jobname for cur_job in jsonLdr.data when "BOX" is cur_job.job_type
         res.reply "--------------------------------------------------------------"
 
     robot.hear /jobs like (.*)/i, (res) ->
         pattern = res.match[1]
         jobs = []
-        jobs.push cur_job.jobname for cur_job in json when -1 isnt cur_job.jobname.indexOf pattern
+        jobs.push cur_job.jobname for cur_job in jsonLdr.data when -1 isnt cur_job.jobname.indexOf pattern
         jobs.sort()
         res.reply "==> Jobs looking like #{pattern} <=="
+        res.reply jobname for jobname in jobs
+        res.reply "--------------------------------------------------------------"
+
+    robot.hear /fts like (.*)/i, (res) ->
+        pattern = res.match[1]
+        jobs = []
+        jobs.push cur_job.jobname for cur_job in jsonLdr.data when (-1 isnt cur_job.jobname.indexOf pattern) and ("FT" is cur_job.job_type)
+        jobs.sort()
+        res.reply "==> FTs looking like #{pattern} <=="
+        res.reply jobname for jobname in jobs
+        res.reply "--------------------------------------------------------------"
+
+    robot.hear /boxes like (.*)/i, (res) ->
+        pattern = res.match[1]
+        jobs = []
+        jobs.push cur_job.jobname for cur_job in jsonLdr.data when (-1 isnt cur_job.jobname.indexOf pattern) and ("BOX" is cur_job.job_type)
+        jobs.sort()
+        res.reply "==> BOXs looking like #{pattern} <=="
         res.reply jobname for jobname in jobs
         res.reply "--------------------------------------------------------------"
 
@@ -91,7 +110,7 @@ module.exports = (robot) ->
     robot.hear /jobs by calendar (.*)/i, (res) ->
         calendar = res.match[1]
         res.reply "==> The following jobs are following the calendar #{calendar} <=="
-        res.reply cur_job.jobname for cur_job in json when calendar is cur_job.run_calendar
+        res.reply cur_job.jobname for cur_job in jsonLdr.data when calendar is cur_job.run_calendar
         res.reply "--------------------------------------------------------------"
     #
     ################################################################################
@@ -100,25 +119,17 @@ module.exports = (robot) ->
     robot.hear /(.*) (triggers|declenche|déclenche)/i, (res) ->
         trigger = res.match[1]
         res.reply "==> The job #{trigger} triggers the following jobs <=="
-        res.reply cur_job.jobname for cur_job in json when -1 isnt cur_job.condition.indexOf trigger
+        res.reply cur_job.jobname for cur_job in jsonLdr.data when -1 isnt cur_job.condition.indexOf trigger
         res.reply "--------------------------------------------------------------"
 
     robot.hear /(.*) (childs|kids)/i, (res) ->
         father = res.match[1]
         res.reply "==> Here are the #{father} job's childs <=="
-        res.reply cur_job.jobname for cur_job in json when father is cur_job.box_name
+        res.reply cur_job.jobname for cur_job in jsonLdr.data when father is cur_job.box_name
         res.reply "--------------------------------------------------------------"
 
     robot.hear /(.*) job (desc|description|details)/i, (res) ->
-        exactname = res.match[1]
-        foundJob = getJob exactname
-        if not foundJob
-            res.reply "ERROR :: Unkown job :("
-            res.reply "--------------------------------------------------------------"
-            return
-        res.reply "===>  "+foundJob.jobname+"  <==="
-        displayJob(foundJob,res)
-        res.reply "--------------------------------------------------------------"
+        jobDesc(res.match[1], res)
 
     robot.hear /(.*) (family|audit)/i, (res) ->
         jobname = res.match[1]
@@ -134,12 +145,12 @@ module.exports = (robot) ->
 
         res.reply "--------------------------------------------------------------"
         if grandParent
-            res.reply "===> GRAND PARENT : "+grandParent.jobname
+            res.reply "===> BOX 0 : "+grandParent.jobname
             res.reply "--------------------------------------------------------------"
             displayJob(grandParent,res)
             res.reply "--------------------------------------------------------------"
         if parent
-            res.reply "===> PARENT : "+parent.jobname
+            res.reply "===> BOX 1 : "+parent.jobname
             res.reply "--------------------------------------------------------------"
             displayJob(parent,res)
             res.reply "--------------------------------------------------------------"
@@ -147,3 +158,5 @@ module.exports = (robot) ->
         res.reply "--------------------------------------------------------------"
         displayJob(foundJob,res)
         res.reply "--------------------------------------------------------------"
+
+module.exports.jobDesc = jobDesc
