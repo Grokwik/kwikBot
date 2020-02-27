@@ -4,19 +4,20 @@
 # Note
 #   (!) Must be updated manually (!)
 
-'use strict'
+#'use strict'
 
 module.exports = (robot) ->
-    robot.hear /(help|aide|\?|--help|-h)/i, (res) ->
+    robot.hear /(help|aide|\?)/i, (res) ->
         res.reply ""
         res.reply "===== TRIAPLAT related stuff =============================="
         res.reply ""
         res.reply "jobs                : List all the jobs"
         res.reply "fts                 : List all the file transfers"
-        res.reply "                    : aliases : file transfers, file transferts"
         res.reply "boxes               : List all the boxes"
         res.reply "                    : aliases : boxs"
         res.reply "jobs like XX        : Lists all the jobs whose name are containing XX"
+        res.reply "fts like XX         : Lists all the fts whose name are containing XX"
+        res.reply "boxes like XX       : Lists all the boxes whose name are containing XX"
         res.reply "XX job desc         : Displays the description of the job named XX"
         res.reply "                    : aliases : job description,job details"
         res.reply "XXX triggers        : List the jobs that are in the starting condition of the job XX"
@@ -37,6 +38,24 @@ module.exports = (robot) ->
         res.reply "                    : aliases : XX calls"
         res.reply "XX called           : Displays the autosys script that contains the XX chain in its called script"
         res.reply ""
+        res.reply "===== IDF (referentielCft) ==============================="
+        res.reply ""
+        res.reply "cft ids              : List all the referentielCft's IDFs"
+        res.reply "                     : aliases : cfts"
+        res.reply "cft like XX          : Lists all the IDF that are containing XX"
+        res.reply "XX cft desc          : Displays the description of the CFT named XX"
+        res.reply "                     : aliases : cft description,cft details"
+        res.reply "cft sending XX       : Lists all the IDFs that are sending the file XX"
+        res.reply "cft categories       : Lists all the different referentielCft file' categories"
+        res.reply "cft from category XX : Lists all the IDFs with the category XX"
+        res.reply ""
+        res.reply "===== Shortcuts =========================================="
+        res.reply ""
+        res.reply "XX desc             : Tries to recognize the type of data you're looking for and displays it's description"
+        res.reply "                    : so far only autosys calendars, jobs, boxes and IDF are recognized"
+        res.reply ""
+
+
         res.reply "===== ISL related stuff =================================="
         res.reply ""
         res.reply "XX c_ids            : List all the contributor's registered C_IDs"
