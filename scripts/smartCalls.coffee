@@ -13,18 +13,27 @@ tap = require '../scripts/triaplat'
 autosys = require '../scripts/autosys'
 refCft = require '../scripts/ReferentielCft'
 
+getType = (str, res) ->
+    if /^IDEOP02-E-[0-9A-Z-_]*$/i.test(str)
+        return "CAL"
+        # res.reply "it's a CAL"
+    else if /^IDEOP02-[0-9A-Z-_]*$/i.test(str)
+        return "JOB"
+        # res.reply "it's a JOB"
+    else if /^[A-Z0-9^-]{8}$/i.test(str)
+        return "IDF"
+        # res.reply "it's an IDF"
+    else
+        return "UNKOWN"
+        # res.reply "Who knows what it is..."
+
 module.exports = (robot) ->
-    robot.hear /IDEOP02-[^E-]{2}[0-9A-Z_]*/i, (res) ->
-        robot.brain.set 'jobType', 'JOB'
-
-    robot.hear /IDEOP02-E-[0-9A-Z_]*/i, (res) ->
-        robot.brain.set 'jobType', 'CAL'
-
-    robot.hear /[A-Z0-9]{8}/i, (res) ->
-        robot.brain.set 'jobType', 'IDF'
+#    robot.hear /test (.*)/i, (res) ->
+#        getType(res.match[1], res)
 
     robot.hear /(.*) (desc|description|details)/i, (res) ->
-        jobType = robot.brain.get('jobType') or 'UNKNOWN'
+        #jobType = robot.brain.get('jobType') or 'UNKNOWN'
+        jobType = getType(res.match[1], res)
         if "JOB" is jobType
             tap.jobDesc res.match[1], res
         else if "CAL" is jobType
@@ -33,4 +42,4 @@ module.exports = (robot) ->
             refCft.cftDesc res.match[1], res
         else
             res.reply "I don't recognize the type of data you're looking for :/"
-        robot.brain.set 'jobType', 'UNKNOWN'
+         #robot.brain.set 'jobType', 'UNKNOWN'
