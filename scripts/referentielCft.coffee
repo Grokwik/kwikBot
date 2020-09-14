@@ -10,7 +10,7 @@
 #
 'use strict'
 refCftLoader = require '../libs/referentielCftLoader'
-refCftLoader.toJson "ReferentielCft.csv"
+refCftLoader.toJson('ReferentielCft.csv')
 jsonRefCft = refCftLoader.convertedData
 
 getCft = (idf) ->
@@ -25,8 +25,8 @@ displayCft = (foundCft, res) ->
     res.reply "IDF         : "+foundCft.idf unless 0 is foundCft.idf.length
     res.reply "Directory   : "+foundCft.directory unless 0 is foundCft.directory.length
     res.reply "File        : "+foundCft.file unless 0 is foundCft.file.length
-    res.reply "Jobset      : "+foundCft.jobset unless 0 is foundCft.jobset.length
-    res.reply "job         : "+foundCft.job unless 0 is foundCft.job.length
+    res.reply "Jobset      : "+foundCft.jobset.toUpperCase() unless 0 is foundCft.jobset.length
+    res.reply "job         : "+foundCft.job.toUpperCase() unless 0 is foundCft.job.length
     res.reply "earlytime   : "+foundCft.earlytime unless 0 is foundCft.earlytime.length
     res.reply "abendaction : "+foundCft.abendaction unless 0 is foundCft.abendaction.length
     res.reply "jobsetpred  : "+foundCft.jobsetpred unless 0 is foundCft.jobsetpred.length
@@ -61,7 +61,7 @@ module.exports = (robot) ->
         # when "CMD" is cur_job.job_type
         res.reply "--------------------------------------------------------------"
 
-    robot.hear /cft like (.*)/i, (res) ->
+    robot.hear /cfts like (.*)/i, (res) ->
         pattern = res.match[1]
         cfts = []
         cfts.push cur_cft.idf for cur_cft in jsonRefCft when -1 isnt cur_cft.idf.indexOf pattern
@@ -98,3 +98,6 @@ module.exports = (robot) ->
         res.reply "--------------------------------------------------------------"
 
 module.exports.cftDesc = cftDesc
+module.exports.jsonRefCft = jsonRefCft
+module.exports.getCft = getCft
+#module.exports.envSwitch = envSwitch
