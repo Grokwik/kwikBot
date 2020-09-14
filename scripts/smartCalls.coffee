@@ -11,7 +11,7 @@
 'use strict'
 tap = require '../scripts/triaplat'
 autosys = require '../scripts/autosys'
-refCft = require '../scripts/ReferentielCft'
+refCft = require '../scripts/referentielCft'
 
 getType = (str, res) ->
     if /^IDEOP02-E-[0-9A-Z-_]*$/i.test(str)
@@ -30,8 +30,18 @@ getType = (str, res) ->
 module.exports = (robot) ->
 #    robot.hear /test (.*)/i, (res) ->
 #        getType(res.match[1], res)
+    robot.hear /(^[^ ]*$)/i, (res) ->
+        #jobType = robot.brain.get('jobType') or 'UNKNOWN'
+        jobType = getType(res.match[1], res)
+        if "JOB" is jobType
+            tap.jobDesc res.match[1], res
+        else if "CAL" is jobType
+            autosys.calDesc res.match[1], res
+        else if "IDF" is jobType
+            refCft.cftDesc res.match[1], res
+         #robot.brain.set 'jobType', 'UNKNOWN'
 
-    robot.hear /(.*) (desc|description|details)/i, (res) ->
+    robot.hear /([^ ]*) +(desc|description|details)/i, (res) ->
         #jobType = robot.brain.get('jobType') or 'UNKNOWN'
         jobType = getType(res.match[1], res)
         if "JOB" is jobType
@@ -43,3 +53,13 @@ module.exports = (robot) ->
         else
             res.reply "I don't recognize the type of data you're looking for :/"
          #robot.brain.set 'jobType', 'UNKNOWN'
+
+    robot.hear /jobs sending (.*)/i, (res) ->
+        filename = res.match[1]
+        res.reply "==> Jobs sending the file #{filename} <=="
+        idfs = []
+        idfs.push cur_cft.idf for cur_cft in refCft.jsonRefCft when -1 isnt cur_cft.file is filename
+        for idf in idfs
+            foundCft = refCft.getCft idf
+            res.reply foundCft.idf+" ====> "+foundCft.job.toUpperCase()
+        res.reply "--------------------------------------------------------------"
