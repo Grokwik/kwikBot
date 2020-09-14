@@ -4,10 +4,9 @@
 # Note
 #   TODO
 'use strict'
-fs = require 'fs'
 
 jsonLoader = require '../libs/jsonLoader'
-json = new jsonLoader.JsonLoader('requetes_sql.json').data
+json = new jsonLoader.JsonLoader('requetesSql.json').data
 
 module.exports = (robot) ->
     robot.hear /sql (list|ls)/i, (res) ->
