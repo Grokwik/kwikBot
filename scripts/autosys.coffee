@@ -12,9 +12,7 @@
 'use strict'
 jsonLoader = require '../libs/jsonLoader'
 jsonCal = new jsonLoader.JsonLoader('autosys_calendars.json')
-jsonAS = new jsonLoader.JsonLoader('autosys_scripts.json')
-#jsonCal = jsonLoader.load 'autosys_calendars.json'
-#jsonAS = jsonLoader.load 'autosys_scripts.json'
+currentJson = new jsonLoader.JsonLoader('autosys_scripts.json')
 
 calDesc = (calendrier, res) ->
         description = cur_cal.description for cur_cal in jsonCal.data when cur_cal.name is calendrier
@@ -26,6 +24,14 @@ calDesc = (calendrier, res) ->
         res.reply "Description : #{description}"
         res.reply "--------------------------------------------------------------"
 
+getCalledScript = (as_script) ->
+        return script.called_script for script in currentJson.data when script.as_script is as_script
+
+calledScriptFromFullASScript = (full_as_script) ->
+        scripts = []
+        scripts.push script.called_script for script in currentJson.data when -1 isnt full_as_script.indexOf script.as_script
+        return scripts[0]
+
 module.exports = (robot) ->
     robot.hear /(.*) (cal|calendrier|calendar) desc/i, (res) ->
         calendrier = res.match[1]
@@ -36,16 +42,19 @@ module.exports = (robot) ->
         res.reply "Les calendriers référencés sont :"
         res.reply "#{cur_cal.name} : #{cur_cal.description}" for cur_cal in jsonCal.data
 
-    robot.hear /(.*) (call|calls)$/i, (res) ->
-        as_script = res.match[1]
-        res.reply script.called_script for script in jsonAS.data when script.as_script is as_script
-
     robot.hear /(.*) called/i, (res) ->
         pattern = res.match[1]
         scripts = []
-        scripts.push script for script in jsonAS.data when -1 isnt script.called_script.indexOf pattern
+        scripts.push script for script in currentJson.data when -1 isnt script.called_script.indexOf pattern
         scripts.sort()
         res.reply ""
         res.reply script.as_script+" ==> "+script.called_script for script in scripts
 
+    # Still working but useless since it's now included in the "desc" command of the jobs
+    # (hence the export of the "getCalledScript" method)
+    robot.hear /(.*) (call|calls)$/i, (res) ->
+        res.reply getCalledScript res.match[1]
+
 module.exports.calDesc = calDesc
+module.exports.getCalledScript = getCalledScript
+module.exports.calledScriptFromFullASScript = calledScriptFromFullASScript
