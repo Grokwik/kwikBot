@@ -4,6 +4,7 @@
 ## Note
 
 'use strict'
+robotMemory = require '../scripts/memory'
 jsonLoader = require '../libs/jsonLoader'
 currentJson = new jsonLoader.JsonLoader('entries.json')
 tap = require '../scripts/triaplat'
@@ -17,6 +18,7 @@ module.exports = (robot) ->
         jobs.sort()
         if jobs.length is 1
             tap.jobDesc(jobs[0], res)
+            robotMemory.memorize(robot.brain, jobs[0])
         else
             res.reply cur_job for cur_job in jobs
 
