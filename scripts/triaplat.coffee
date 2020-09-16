@@ -35,6 +35,7 @@ triaplatjson = triaplatLoader.convertedData
 
 autosys = require '../scripts/autosys'
 monitoring = require '../scripts/monitoring'
+robotMemory = require '../scripts/memory'
 
 getJob = (exactname) ->
     foundJob = cur_job for cur_job in triaplatjson when exactname is cur_job.jobname
@@ -93,6 +94,19 @@ displayAllTriggeredJobs = (job, indent, depth, res) ->
         res.reply indent+indentation+" "+cur_job
         displayAllTriggeredJobs(cur_job, indent+1, depth-1, res)
 
+getTriggeredJobs = (trigger, res, brain) ->
+    jobs = []
+    res.reply "==> The job #{trigger} triggers the following jobs <=="
+    jobs.push cur_job for cur_job in getTriggeredJob(trigger)
+    jobs.sort()
+    if jobs.length is 1
+        displayJob(getJob(jobs[0]),res)
+        robotMemory.memorize(brain, jobs[0])
+    else
+        res.reply cur_job for cur_job in jobs
+        res.reply "--------------------------------------------------------------"
+
+
 module.exports = (robot) ->
     ################################################################################
     ## LISTINGS ####################################################################
@@ -149,21 +163,16 @@ module.exports = (robot) ->
         res.reply "==> The following jobs are following the calendar #{calendar} <=="
         res.reply cur_job.jobname for cur_job in triaplatjson when calendar is cur_job.run_calendar
         res.reply "--------------------------------------------------------------"
-    #
+
     ################################################################################
     ## DETAILS #####################################################################
     ################################################################################
     robot.hear /(.*) (triggers|declenche|déclenche)/i, (res) ->
-        trigger = res.match[1]
-        jobs = []
-        res.reply "==> The job #{trigger} triggers the following jobs <=="
-        jobs.push cur_job for cur_job in getTriggeredJob(trigger)
-        jobs.sort()
-        if jobs.length is 1
-            displayJob(getJob(jobs[0]),res)
-        else
-            res.reply cur_job for cur_job in jobs
-            res.reply "--------------------------------------------------------------"
+        getTriggeredJobs res.match[1], res, robot.brain
+
+    robot.hear /^[ \t]*next[ \t]*$/i, (res) ->
+        trigger = robotMemory.getMemory(robot.brain)
+        getTriggeredJobs trigger, res, robot.brain
 
     robot.hear /(.*) (childs|kids)/i, (res) ->
         father = res.match[1]
