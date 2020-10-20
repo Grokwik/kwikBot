@@ -97,6 +97,18 @@ module.exports = (robot) ->
         res.reply idf for idf in cfts
         res.reply "--------------------------------------------------------------"
 
+    robot.hear /(help|aide|\?)/i, (res) ->
+        res.reply ""
+        res.reply "===== IDF (referentielCft) ==============================="
+        res.reply "cft ids              : List all the referentielCft's IDFs"
+        res.reply "                     : aliases : cfts"
+        res.reply "cft like XX          : Lists all the IDF that are containing XX"
+        res.reply "XX cft desc          : Displays the description of the CFT named XX"
+        res.reply "                     : aliases : cft description,cft details"
+        res.reply "cft sending XX       : Lists all the IDFs that are sending the file XX"
+        res.reply "cft categories       : Lists all the different referentielCft file' categories"
+        res.reply "cft from category XX : Lists all the IDFs with the category XX"
+
 module.exports.cftDesc = cftDesc
 module.exports.jsonRefCft = jsonRefCft
 module.exports.getCft = getCft
