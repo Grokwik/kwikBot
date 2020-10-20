@@ -1,37 +1,11 @@
 # Description:
 #   Commands used to look for informations in the triaplat
 #
-# Note
-#   The triaplat.json file has the following format :
-#   [
-#    {
-#      "jobname": "IDEOP02-H2SAV01-SAVEORA-P01188AP10-FULL",
-#      "job_type": "CMD",
-#      "owner": "oracle",
-#      "start_times": "",
-#      "alarm_if_fail": "1",
-#      "box_name": "IDEOP02-H1BOX-SAVEORA-P01188AP10",
-#      "command": "/apps/exploit/autosys/DEOP02/script/IDEOP02-H2SAV01-SAVEORA-P01188AP10-FULL.ksh",
-#      "alias_machine": "s00va9943923",
-#      "condition": "",
-#      "run_calendar": "",
-#      "description": "Sauvegarde FULL de l instance P01188AP10",
-#      "run_window": ""
-#    },
-#    {
-#      "jobname": "IDEOP02-H2SAV01-SAVEORA-P01188AS10-FULL",
-#      "job_type": "CMD",
-#      (...)
 'use strict'
 
-# Passage de la lecture du triaplat en json
-#jsonLoader = require '../libs/jsonLoader'
-#jsonLdr = new jsonLoader.JsonLoader('triaplat.json')
-# remplacer "triaplatjson" par jsonLdr.data
 triaplatLoader = require '../libs/csvTriaplatLoader'
 triaplatLoader.toJson('triaplat.csv')
 triaplatjson = triaplatLoader.convertedData
-
 
 autosys = require '../scripts/autosys'
 monitoring = require '../scripts/monitoring'
@@ -71,7 +45,7 @@ displayJob = (foundJob, res) ->
     res.reply "Ok ko file    : "+foundMonitoring.okko unless 0 is foundMonitoring.okko.length
     res.reply "Log file      : "+foundMonitoring.log unless 0 is foundMonitoring.log.length
 
-jobDesc = (exactname, res) ->
+jobDesc = (exactname, res, brain) ->
     foundJob = getJob exactname
     if not foundJob
         res.reply "ERROR :: Unkown job :("
@@ -79,6 +53,7 @@ jobDesc = (exactname, res) ->
         return
     res.reply "===>  "+foundJob.jobname+"  <==="
     displayJob(foundJob,res)
+    robotMemory.memorize(brain, foundJob)
     res.reply "--------------------------------------------------------------"
 
 getTriggeredJob = (job) ->
@@ -100,8 +75,9 @@ getTriggeredJobs = (trigger, res, brain) ->
     jobs.push cur_job for cur_job in getTriggeredJob(trigger)
     jobs.sort()
     if jobs.length is 1
-        displayJob(getJob(jobs[0]),res)
-        robotMemory.memorize(brain, jobs[0])
+        triggeredJob = getJob(jobs[0])
+        displayJob(triggeredJob,res)
+        robotMemory.memorize(brain, triggeredJob)
     else
         res.reply cur_job for cur_job in jobs
         res.reply "--------------------------------------------------------------"
@@ -132,6 +108,7 @@ module.exports = (robot) ->
         jobs.push cur_job for cur_job in triaplatjson when -1 isnt cur_job.jobname.indexOf pattern
         if jobs.length is 1
             displayJob(jobs[0],res)
+            robotMemory.memorize(robot.brain, jobs[0])
         else
             res.reply "==> Jobs looking like #{pattern} <=="
             res.reply job.jobname for job in jobs
@@ -172,7 +149,7 @@ module.exports = (robot) ->
 
     robot.hear /^[ \t]*next[ \t]*$/i, (res) ->
         trigger = robotMemory.getMemory(robot.brain)
-        getTriggeredJobs trigger, res, robot.brain
+        getTriggeredJobs trigger.jobname, res, robot.brain
 
     robot.hear /(.*) (childs|kids)/i, (res) ->
         father = res.match[1]
@@ -181,7 +158,7 @@ module.exports = (robot) ->
         res.reply "--------------------------------------------------------------"
 
     robot.hear /(.*) job (desc|description|details)/i, (res) ->
-        jobDesc(res.match[1], res)
+        jobDesc(res.match[1], res, brain)
 
     robot.hear /(.*) (family|audit)/i, (res) ->
         jobname = res.match[1]
@@ -217,5 +194,27 @@ module.exports = (robot) ->
         res.reply "==> The job #{trigger} triggers the following jobs <=="
         displayAllTriggeredJobs(trigger, 1, depth, res)
         res.reply "--------------------------------------------------------------"
+
+    robot.hear /(help|aide|\?)/i, (res) ->
+        res.reply ""
+        res.reply "===== TRIAPLAT related stuff =============================="
+        res.reply "jobs                : List all the jobs"
+        res.reply "fts                 : List all the file transfers"
+        res.reply "boxes               : List all the boxes"
+        res.reply "                    : aliases : boxs"
+        res.reply "jobs like XX        : Lists all the jobs whose name are containing XX"
+        res.reply "fts like XX         : Lists all the fts whose name are containing XX"
+        res.reply "boxes like XX       : Lists all the boxes whose name are containing XX"
+        res.reply "XX job desc         : Displays the description of the job named XX"
+        res.reply "                    : aliases : job description,job details"
+        res.reply "XXX triggers        : List the jobs that are in the starting condition of the job XX"
+        res.reply "                    : aliases : declenche, déclenche"
+        res.reply "XX cascade          : List all the jobs that are in the starting condition of the job XX"
+        res.reply "XX cascade Y        : List all the jobs that are in the starting condition of the job XX and do it on Y generations"
+        res.reply "XXX childs          : List all the jobs whose box is XX"
+        res.reply "                    : aliases : XX kids"
+        res.reply "XX family           : Displays the while job hierarchy for the XX job (with the details for each job)"
+        res.reply "jobs by calendar XX : List all the jobs whose calender is XX"
+        res.reply "next                : Pseudo alias of the 'triggers' command"
 
 module.exports.jobDesc = jobDesc
