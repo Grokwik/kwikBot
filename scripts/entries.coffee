@@ -17,11 +17,16 @@ module.exports = (robot) ->
         jobs.push cur.job for cur in currentJson.data when cur.partner is partner
         jobs.sort()
         if jobs.length is 1
-            tap.jobDesc(jobs[0], res)
-            robotMemory.memorize(robot.brain, jobs[0])
+            tap.jobDesc(jobs[0], res, robot.brain)
         else
             res.reply cur_job for cur_job in jobs
 
     robot.hear /^entries$/i, (res) ->
         res.reply ""
         res.reply cur.partner+" : "+cur.job for cur in currentJson.data
+
+    robot.hear /(help|aide|\?)/i, (res) ->
+        res.reply ""
+        res.reply "===== TRIAPLAT related stuff =============================="
+        res.reply "entries             : Displays the entry point of all the registered contributors"
+        res.reply "XXX entry           : Displays the entry point of the contributor XXX"
