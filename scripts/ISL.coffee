@@ -33,7 +33,13 @@ module.exports = (robot) ->
     res.reply "Voici le(s) C_ID référencés pour #{contributeur} :"
     res.reply cid.value for cid in all_cids
 
-
   robot.hear /contribs/i, (res) ->
       res.reply "Voici tous contributeurs référencés :"
       res.reply "#{cur_contrib.contrib} a #{cur_contrib.c_ids.length} C_IDs" for cur_contrib in json
+
+    robot.hear /(help|aide|\?)/i, (res) ->
+        res.reply ""
+        res.reply "===== ISL related stuff =================================="
+        res.reply "XX c_ids            : List all the contributor's registered C_IDs"
+        res.reply "                    : aliases : calendriers"
+        res.reply "contribs            : List of contributors that are registered"
