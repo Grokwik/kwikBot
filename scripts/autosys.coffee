@@ -39,7 +39,7 @@ module.exports = (robot) ->
 
     robot.hear /(calendriers|calendars)$/i, (res) ->
         res.reply ""
-        res.reply "Les calendriers référencés sont :"
+        res.reply "The referenced calendars are :"
         res.reply "#{cur_cal.name} : #{cur_cal.description}" for cur_cal in jsonCal.data
 
     robot.hear /(.*) called/i, (res) ->
@@ -50,10 +50,14 @@ module.exports = (robot) ->
         res.reply ""
         res.reply script.as_script+" ==> "+script.called_script for script in scripts
 
-    # Still working but useless since it's now included in the "desc" command of the jobs
-    # (hence the export of the "getCalledScript" method)
-    robot.hear /(.*) (call|calls)$/i, (res) ->
-        res.reply getCalledScript res.match[1]
+    robot.hear /(help|aide|\?)/i, (res) ->
+        res.reply ""
+        res.reply "===== AUTOSYS related stuff =============================="
+        res.reply "XX calendar desc    : Displays the XXX calendar's description"
+        res.reply "                    : aliases : XX cal desc, XX calendrier desc"
+        res.reply "calendars           : List all the autosys calendars"
+        res.reply "                    : aliases : calendriers"
+        res.reply "XX called           : Displays the autosys script that contains the XX chain in its called script"
 
 module.exports.calDesc = calDesc
 module.exports.getCalledScript = getCalledScript
