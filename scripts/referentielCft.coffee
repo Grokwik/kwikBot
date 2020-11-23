@@ -70,6 +70,15 @@ module.exports = (robot) ->
         res.reply idf for idf in cfts
         res.reply "--------------------------------------------------------------"
 
+    robot.hear /cfts match (.*)/i, (res) ->
+        cfts = []
+        re = new RegExp(res.match[1], "g");
+        cfts.push cur_cft.idf for cur_cft in jsonRefCft when re.test(cur_cft.idf)
+        cfts.sort()
+        res.reply "==> Cfts looking like "+res.match[1]+" <=="
+        res.reply idf for idf in cfts
+        res.reply "--------------------------------------------------------------"
+
     robot.hear /(.*) cft (desc|description|details)/i, (res) ->
         cftDesc(res.match[1], res)
 
